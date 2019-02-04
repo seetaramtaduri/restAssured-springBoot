@@ -26,9 +26,10 @@ class UsersWebServiceEndpointTests {
 	private static final String EMAIL_ADDRESS = "sergey.kargopolov@swiftdeveloperblog.com";
 	private static final String HEADER_AUTHORIZATION_VALUE = "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJwb3BvMTIiLCJleHAiOjE1NDk3Mzc3Nzh9._rFDi81AYMtBIkS-kGu5vkBxr3uZcvxQFcSKBRyOwxvthZpRDjxppp_HCq0gZqUNlUPlwy_zBixaK5MQVyv65w";
 	private static String authorizationHeader;
-	private static String userId = "Iz54P9ipb9pCryqiyuHUpXqrbfHB30";
+	private static String userId = "qisaUW0dY0MPRABvtiPVAGwiJhaE7C";
 
 	List<Map<String, String>> resAddresses;
+	Response response;
 
 	@BeforeEach
 	void setUp() throws Exception {
@@ -54,9 +55,9 @@ class UsersWebServiceEndpointTests {
 
 	@Test
 	final void testGetUser() {
-		Response response = given().header("Authorization", HEADER_AUTHORIZATION_VALUE).pathParam("userId", userId)
-				.when().get(CONTEXT_PATH + "/users/{userId}").then().statusCode(200).contentType(APPLICATION_JSON)
-				.extract().response();
+		response = given().header("Authorization", HEADER_AUTHORIZATION_VALUE).pathParam("userId", userId).when()
+				.get(CONTEXT_PATH + "/users/{userId}").then().statusCode(200).contentType(APPLICATION_JSON).extract()
+				.response();
 
 		String resUserId = response.jsonPath().getString("userId");
 		String resEmail = response.jsonPath().getString("email");
@@ -89,7 +90,7 @@ class UsersWebServiceEndpointTests {
 		userDetails.put("firstName", "popo");
 		userDetails.put("lastName", "yoyo");
 
-		Response response = given().contentType(APPLICATION_JSON).header("Authorization", HEADER_AUTHORIZATION_VALUE)
+		response = given().contentType(APPLICATION_JSON).header("Authorization", HEADER_AUTHORIZATION_VALUE)
 				.pathParam("userId", userId).accept(APPLICATION_JSON).body(userDetails).when()
 				.put(CONTEXT_PATH + "/users/{userId}").then().statusCode(200).contentType(APPLICATION_JSON).extract()
 				.response();
@@ -104,7 +105,22 @@ class UsersWebServiceEndpointTests {
 		assertEquals(resLastName, "yoyo");
 		assertNotNull(resUpdatedAddresses);
 		assertEquals(resUpdatedAddresses.size(), 2);
-		//assertEquals(resUpdatedAddresses.get(0).toString(), resAddresses.get(0).toString());
+	}
+
+	@Test
+	final void testDeleteUser() {
+		response = given().header("Authorization", HEADER_AUTHORIZATION_VALUE).accept(APPLICATION_JSON).pathParam("userId", userId).when()
+				.delete(CONTEXT_PATH + "/users/{userId}").then().statusCode(200).contentType(APPLICATION_JSON).extract()
+				.response();
+
+		assertNotNull(response);
+		String operationName = response.jsonPath().getString("operationName");
+		String operationStatus = response.jsonPath().getString("operationStatus");
+		assertNotNull(operationName);
+		assertNotNull(operationStatus);
+
+		assertEquals(operationName, "DELETE");
+		assertEquals(operationStatus, "SUCCESS");
 	}
 
 }
