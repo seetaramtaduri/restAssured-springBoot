@@ -5,8 +5,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.junit.jupiter.api.Assertions.*;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,9 +24,11 @@ class UsersWebServiceEndpointTests {
 	private static final String APPLICATION_JSON = "application/json";
 	private static final String CONTEXT_PATH = "/yonipony";
 	private static final String EMAIL_ADDRESS = "sergey.kargopolov@swiftdeveloperblog.com";
-	private static final String HEADER_VALUE = "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJwb3BvMTIiLCJleHAiOjE1NDk3Mzc3Nzh9._rFDi81AYMtBIkS-kGu5vkBxr3uZcvxQFcSKBRyOwxvthZpRDjxppp_HCq0gZqUNlUPlwy_zBixaK5MQVyv65w";
+	private static final String HEADER_AUTHORIZATION_VALUE = "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJwb3BvMTIiLCJleHAiOjE1NDk3Mzc3Nzh9._rFDi81AYMtBIkS-kGu5vkBxr3uZcvxQFcSKBRyOwxvthZpRDjxppp_HCq0gZqUNlUPlwy_zBixaK5MQVyv65w";
 	private static String authorizationHeader;
 	private static String userId = "Iz54P9ipb9pCryqiyuHUpXqrbfHB30";
+
+	List<Map<String, String>> resAddresses;
 
 	@BeforeEach
 	void setUp() throws Exception {
@@ -54,13 +54,13 @@ class UsersWebServiceEndpointTests {
 
 	@Test
 	final void testGetUser() {
-		Response response = given().header("Authorization", HEADER_VALUE).pathParam("userId", userId).when()
-				.get(CONTEXT_PATH + "/users/{userId}").then().statusCode(200).contentType(APPLICATION_JSON).extract()
-				.response();
+		Response response = given().header("Authorization", HEADER_AUTHORIZATION_VALUE).pathParam("userId", userId)
+				.when().get(CONTEXT_PATH + "/users/{userId}").then().statusCode(200).contentType(APPLICATION_JSON)
+				.extract().response();
 
 		String resUserId = response.jsonPath().getString("userId");
 		String resEmail = response.jsonPath().getString("email");
-		List<Map<String, String>> resAddresses = response.jsonPath().getList("addresses");
+		resAddresses = response.jsonPath().getList("addresses");
 
 		assertNotNull(resUserId);
 		assertEquals(resEmail, EMAIL_ADDRESS);
@@ -81,6 +81,30 @@ class UsersWebServiceEndpointTests {
 		} catch (JSONException e) {
 			fail(e.getMessage());
 		}
+	}
+
+	@Test
+	final void testUpdateUser() {
+		Map<String, String> userDetails = new HashMap<>();
+		userDetails.put("firstName", "popo");
+		userDetails.put("lastName", "yoyo");
+
+		Response response = given().contentType(APPLICATION_JSON).header("Authorization", HEADER_AUTHORIZATION_VALUE)
+				.pathParam("userId", userId).accept(APPLICATION_JSON).body(userDetails).when()
+				.put(CONTEXT_PATH + "/users/{userId}").then().statusCode(200).contentType(APPLICATION_JSON).extract()
+				.response();
+
+		String resFirstName = response.jsonPath().getString("firstName");
+		String resLastName = response.jsonPath().getString("lastName");
+		List<Map<String, String>> resUpdatedAddresses = response.jsonPath().getList("addresses");
+
+		assertNotNull(resFirstName);
+		assertNotNull(resLastName);
+		assertEquals(resFirstName, "popo");
+		assertEquals(resLastName, "yoyo");
+		assertNotNull(resUpdatedAddresses);
+		assertEquals(resUpdatedAddresses.size(), 2);
+		//assertEquals(resUpdatedAddresses.get(0).toString(), resAddresses.get(0).toString());
 	}
 
 }
