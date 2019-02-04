@@ -66,17 +66,17 @@ class TestCreateUser {
 		assertNotNull(response);
 		assertNotNull(userId);
 		assertTrue(userId.length() == 30);
-		
+
 		String bodyString = response.body().asString();
 		try {
 			JSONObject responseBodyJson = new JSONObject(bodyString);
 			JSONArray addressesJson = responseBodyJson.getJSONArray("addresses");
-			
+
 			assertNotNull(addressesJson);
 			assertTrue(addressesJson.length() == 2);
-			
+
 			String addressId = addressesJson.getJSONObject(0).getString("addressId");
-			
+
 			assertNotNull(addressId);
 			assertTrue(addressId.length() == 30);
 		} catch (JSONException e) {
