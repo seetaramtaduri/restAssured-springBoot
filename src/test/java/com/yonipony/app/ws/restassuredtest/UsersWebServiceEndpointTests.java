@@ -12,21 +12,24 @@ import java.util.Map;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.junit.FixMethodOrder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.runners.MethodSorters;
 
 import io.restassured.RestAssured;
 //import static io.restassured.RestAssured.given;
 import io.restassured.response.Response;
 
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 class UsersWebServiceEndpointTests {
 
 	private static final String APPLICATION_JSON = "application/json";
 	private static final String CONTEXT_PATH = "/yonipony";
 	private static final String EMAIL_ADDRESS = "sergey.kargopolov@swiftdeveloperblog.com";
-	private static final String HEADER_AUTHORIZATION_VALUE = "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJwb3BvMTIiLCJleHAiOjE1NDk3Mzc3Nzh9._rFDi81AYMtBIkS-kGu5vkBxr3uZcvxQFcSKBRyOwxvthZpRDjxppp_HCq0gZqUNlUPlwy_zBixaK5MQVyv65w";
+	// static final String HEADER_AUTHORIZATION_VALUE = "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJwb3BvMTIiLCJleHAiOjE1NDk3Mzc3Nzh9._rFDi81AYMtBIkS-kGu5vkBxr3uZcvxQFcSKBRyOwxvthZpRDjxppp_HCq0gZqUNlUPlwy_zBixaK5MQVyv65w";
 	private static String authorizationHeader;
-	private static String userId = "qisaUW0dY0MPRABvtiPVAGwiJhaE7C";
+	private static String userId;
 
 	List<Map<String, String>> resAddresses;
 	Response response;
@@ -37,25 +40,29 @@ class UsersWebServiceEndpointTests {
 		RestAssured.port = 8080;
 	}
 
-//	@Test
-//	void testUserLogin() {
-//		Map<String, String> loginDetails = new HashMap<>();
-//		loginDetails.put("email", EMAIL_ADDRESS);
-//		loginDetails.put("password", "123");
-//
-//		Response response = given().contentType(APPLICATION_JSON).body(loginDetails).when()
-//				.post(CONTEXT_PATH + "/login").then().statusCode(200).contentType(APPLICATION_JSON).extract()
-//				.response();
-//
-//		assertNotNull(response);
-//
-//		authorizationHeader = response.getHeader("Authorization");
-//		userId = response.getHeader("UserId");
-//	}
-
+	// testUserLogin
 	@Test
-	final void testGetUser() {
-		response = given().header("Authorization", HEADER_AUTHORIZATION_VALUE).pathParam("userId", userId).when()
+	void a() {
+		Map<String, String> loginDetails = new HashMap<>();
+		loginDetails.put("email", EMAIL_ADDRESS);
+		loginDetails.put("password", "123");
+
+		Response response = given().contentType(APPLICATION_JSON).accept(APPLICATION_JSON).body(loginDetails).when()
+				.post(CONTEXT_PATH + "/users/login").then().statusCode(200).extract().response();
+
+		assertNotNull(response);
+
+		authorizationHeader = response.getHeader("Authorization");
+		userId = response.getHeader("UserId");
+
+		assertNotNull(authorizationHeader);
+		assertNotNull(userId);
+	}
+
+	// testGetUser
+	@Test
+	final void b() {
+		response = given().header("Authorization", authorizationHeader).pathParam("userId", userId).when()
 				.get(CONTEXT_PATH + "/users/{userId}").then().statusCode(200).contentType(APPLICATION_JSON).extract()
 				.response();
 
@@ -84,13 +91,14 @@ class UsersWebServiceEndpointTests {
 		}
 	}
 
+	// testUpdateUser
 	@Test
-	final void testUpdateUser() {
+	final void c() {
 		Map<String, String> userDetails = new HashMap<>();
 		userDetails.put("firstName", "popo");
 		userDetails.put("lastName", "yoyo");
 
-		response = given().contentType(APPLICATION_JSON).header("Authorization", HEADER_AUTHORIZATION_VALUE)
+		response = given().contentType(APPLICATION_JSON).header("Authorization", authorizationHeader)
 				.pathParam("userId", userId).accept(APPLICATION_JSON).body(userDetails).when()
 				.put(CONTEXT_PATH + "/users/{userId}").then().statusCode(200).contentType(APPLICATION_JSON).extract()
 				.response();
@@ -107,11 +115,12 @@ class UsersWebServiceEndpointTests {
 		assertEquals(resUpdatedAddresses.size(), 2);
 	}
 
+//testDeleteUser
 	@Test
-	final void testDeleteUser() {
-		response = given().header("Authorization", HEADER_AUTHORIZATION_VALUE).accept(APPLICATION_JSON).pathParam("userId", userId).when()
-				.delete(CONTEXT_PATH + "/users/{userId}").then().statusCode(200).contentType(APPLICATION_JSON).extract()
-				.response();
+	final void d() {
+		response = given().header("Authorization", authorizationHeader).accept(APPLICATION_JSON)
+				.pathParam("userId", userId).when().delete(CONTEXT_PATH + "/users/{userId}").then().statusCode(200)
+				.contentType(APPLICATION_JSON).extract().response();
 
 		assertNotNull(response);
 		String operationName = response.jsonPath().getString("operationName");
